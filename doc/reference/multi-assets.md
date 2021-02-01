@@ -1,18 +1,25 @@
-# Multi-assets
+# Multi-asset support
 
-From the Mary era onwards, Cardano supports [multi-assets](https://hydra.iohk.io/job/Cardano/cardano-ledger-specs/specs.shelley-ma/latest/download-by-type/doc-pdf/shelley-ma).
+Starting from Mary (the ledger development upgrade) and onwards, Cardano supports the [multi-asset](https://hydra.iohk.io/job/Cardano/cardano-ledger-specs/specs.shelley-ma/latest/download-by-type/doc-pdf/shelley-ma) feature, which is also referred to as *native tokens*. Multi-asset support extends the existing accounting infrastructure defined in the ledger model (originally designed for processing ada-only transactions) to accommodate transactions using various assets. 
 
-### What is a multi-asset?
+## What is a multi-asset?
 
-Multi-assets are user defined tokens. They are native i.e you don't have to use smart contracts to mint/burn them and a single tx output can have a mixture of ADA and multi-assets. Each token is identified by its asset ID which consists of a policy ID (hash of the minting policy) and an asset name. Tokens with the same asset ID are fungible.
+Multi-assets include ada and a variety of user-defined (custom) token types that can be created and transacted natively. A single tx output, for example, can have a mixture of ada and native tokens.
 
-### How to mint a multi-asset token
+Native support offers distinct advantages for developers as there is no need to create smart contracts to mint or burn custom tokens. This removes a layer of added complexity and potential for manual errors since the ledger handles all token-related functionality. 
 
-#### Step 1 - create a script
+Each token is identified by its asset ID (a unique identifier for a collection of tokens), which consists of a policy ID (hash of the minting policy) and an asset name. Tokens that have the same asset ID are fungible with each other and are not fungible with tokens that have a different asset ID. 
+
+## Minting a multi-asset token
+
+### Step 1 - create a script
 
 First, generate the keys that you require witnesses from using the
 `cardano-cli address key-gen` command. Until we hard fork to the Mary era, we will
-use a simple script to generate our policy ID. Note that you can use a Plutus script when they are available.
+use a simple script to generate the policy ID. 
+
+*Note that you can use a Plutus script when it is available.*
+
 Construct a simple script in JSON syntax
 as described [here](./simple-scripts.md). For this example, we will describe the process using the following script:
 
@@ -29,13 +36,15 @@ where `$KEYHASH` is generated as follows:
 cardano-cli address key-hash --payment-verification-key-file policy.vkey
 ```
 
-Generate the policy ID as from the simple script jus created:
+Similarly, generate the policy ID:
 
 ```bash
 cardano-cli transaction policyid --script-file policy.script
 ```
 
-Construct the tx body and specify the multi-asset you would like to mint. Note that you must spend at least the minimum UTxO value. In the txbody below we are minting 5 tokens of a particular multi-asset and spending 5 those tokens.
+### Step 2 - construct, sign, and submit the transaction
+
+Construct the tx body and specify the multi-asset you would like to mint. Note that you must spend at least the minimum UTxO value and it is essential to hold ada (besides other currencies) to transfer multi-asset tokens between addresses. In the tx body below we mint and spend 5 tokens of a particular multi-asset: 
 
 ```bash
 cardano-cli transaction build-raw \
@@ -59,13 +68,13 @@ cardano-cli transaction sign \
             --out-file      tx
 ```
 
-Submit tx:
+Submit the transaction:
 
 ```bash
 cardano-cli transaction submit --tx-file  tx --testnet-magic 42
 ```
 
-### How to burn a multi-asset token
+## Burning a multi-asset token
 
 Create tx body that will burn 5 couttscoins:
 
@@ -78,7 +87,8 @@ cardano-cli transaction build-raw \
             --mint -5 $POLICYID.couttscoin \
             --out-file txbodyburn
 ```
-Sign the transaction as before:
+
+Sign the transaction:
 
 ```bash
 cardano-cli transaction sign \
@@ -90,7 +100,7 @@ cardano-cli transaction sign \
             --out-file      txburn
 ```
 
-Submit tx:
+Submit the transaction:
 
 ```bash
 cardano-cli transaction submit --tx-file txburn --testnet-magic 42
